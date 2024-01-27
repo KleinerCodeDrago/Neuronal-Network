@@ -54,10 +54,24 @@ print(f'Test Accuracy: {accuracy * 100:.2f}%')
 
 predicted_labels = model.predict(test_data_array).round().reshape(-1)
 correct_predictions = predicted_labels == test_labels_array
-correct_counts = [np.sum(correct_predictions & (test_labels_array == i)) for i in [0, 1]]
+incorrect_predictions = ~correct_predictions
 
-plt.bar(['Not true', 'true'], correct_counts, color=['blue', 'red'])
-plt.xlabel('Category')
-plt.ylabel('Correct Predictions')
-plt.title('Model Performance on Test Data')
+correct_counts = [np.sum(correct_predictions & (test_labels_array == i)) for i in [0, 1]]
+incorrect_counts = [np.sum(incorrect_predictions & (test_labels_array == i)) for i in [0, 1]]
+
+labels = ['Not true', 'True']
+x = np.arange(len(labels))
+width = 0.35
+
+fig, ax = plt.subplots()
+rects1 = ax.bar(x - width/2, correct_counts, width, label='Correct', color='green')
+rects2 = ax.bar(x + width/2, incorrect_counts, width, label='Incorrect', color='red')
+
+ax.set_xlabel('Category')
+ax.set_ylabel('Number of Predictions')
+ax.set_title('Model Performance on Test Data')
+ax.set_xticks(x)
+ax.set_xticklabels(labels)
+ax.legend()
+
 plt.show()
