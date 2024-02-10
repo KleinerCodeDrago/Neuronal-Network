@@ -48,16 +48,31 @@ model.add(Dense(1, activation='sigmoid'))
 model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
 model.fit(train_data_array, train_labels_array, epochs=10, validation_split=0.2)
-
 loss, accuracy = model.evaluate(test_data_array, test_labels_array)
 print(f'Test Accuracy: {accuracy * 100:.2f}%')
 
-predicted_labels = model.predict(test_data_array).round().reshape(-1)
-correct_predictions = predicted_labels == test_labels_array
+threshold = 0.5
+
+predicted_probabilities = model.predict(test_data_array)
+
+print("Some predicted probabilities:", predicted_probabilities[:10])
+
+predicted_labels = (predicted_probabilities >= threshold).astype(int)
+
+print("Some predicted labels:", predicted_labels[:10])
+
+correct_predictions = (predicted_labels.flatten() == test_labels_array)
 incorrect_predictions = ~correct_predictions
+
+print("Correct predictions count:", np.sum(correct_predictions))
+print("Incorrect predictions count:", np.sum(incorrect_predictions))
 
 correct_counts = [np.sum(correct_predictions & (test_labels_array == i)) for i in [0, 1]]
 incorrect_counts = [np.sum(incorrect_predictions & (test_labels_array == i)) for i in [0, 1]]
+
+print("Correct counts:", correct_counts)
+print("Incorrect counts:", incorrect_counts)
+
 
 labels = ['Not true', 'True']
 x = np.arange(len(labels))
@@ -74,4 +89,24 @@ ax.set_xticks(x)
 ax.set_xticklabels(labels)
 ax.legend()
 
+for rect in rects1 + rects2:
+    height = rect.get_height()
+    ax.annotate('{}'.format(height),
+                xy=(rect.get_x() + rect.get_width() / 2, height),
+                xytext=(0, 3),
+                textcoords="offset points",
+                ha='center', va='bottom')
+
+plt.show()
+
+
+predicted_probabilities = model.predict(test_data_array)
+
+plt.figure(figsize=(10, 5))
+plt.hist(predicted_probabilities[test_labels_array == 0], bins=50, alpha=0.7, label='Not true')
+plt.hist(predicted_probabilities[test_labels_array == 1], bins=50, alpha=0.7, label='True')
+plt.xlabel('Predicted Probability of Being True')
+plt.ylabel('Number of Samples')
+plt.title('Histogram of Predicted Probabilities')
+plt.legend()
 plt.show()
