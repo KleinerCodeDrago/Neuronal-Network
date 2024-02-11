@@ -41,7 +41,7 @@ jobs:
             },
             {
               "role": "user",
-              "content": '$escaped_code'
+              "content": $escaped_code
             }
           ]
         }')
