@@ -35,7 +35,7 @@ jobs:
           \"messages\": [
             {
               \"role\": \"system\",
-              \"content\": \"${{vars.CODE.REVIEW_PROMPT}}\"
+              \"content\": \"${{vars.CODE_REVIEW_PROMPT}}\"
             },
             {
               \"role\": \"user\",
