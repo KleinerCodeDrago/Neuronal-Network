@@ -22,7 +22,7 @@ def load_data(file_path):
                 labels.append(1 if review['overall'] > 3 else 0)
     return texts, labels
 
-def create_dataset(texts, labels, batch_size=32):
+def create_dataset(texts, labels, batch_size=128):
     tokenizer = Tokenizer(num_words=20000)
     tokenizer.fit_on_texts(texts)
     sequences = tokenizer.texts_to_sequences(texts)
@@ -39,7 +39,7 @@ print(tf.__version__)
 train_texts, train_labels = load_data('train_reviews.json')
 test_texts, test_labels = load_data('test_reviews.json')
 
-batch_size = 64
+batch_size = 128
 train_dataset = create_dataset(train_texts, train_labels, batch_size)
 test_dataset = create_dataset(test_texts, test_labels, batch_size)
 
@@ -53,7 +53,6 @@ with strategy.scope():
         LSTM(32, dropout=0.2, recurrent_dropout=0.2),
         Dense(1, activation='sigmoid')
     ])
-
     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
 plot_model(model, to_file='model_diagram.png', show_shapes=True, show_layer_names=True, rankdir='TB', expand_nested=False, dpi=300)
