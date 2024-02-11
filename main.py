@@ -12,7 +12,6 @@ def read_json_data(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
         for line in file:
             review = json.loads(line)
-            # Prüfen, ob 'reviewText' im Review vorhanden ist
             if 'reviewText' in review:
                 texts.append(review['reviewText'])
                 labels.append(1 if review['overall'] > 3 else 0)
@@ -105,7 +104,6 @@ for rect in rects1 + rects2:
                 ha='center', va='bottom')
 
 plt.show()
-
 
 predicted_probabilities = model.predict(test_data_array)
 
