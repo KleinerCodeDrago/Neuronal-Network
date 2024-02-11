@@ -1,36 +1,43 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import json
 from keras.models import Sequential
 from keras.layers import Dense, Embedding, GlobalAveragePooling1D
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
+import tensorflow as tf
 
-def read_data(file_path):
+def read_json_data(file_path):
+    texts, labels = [], []
     with open(file_path, 'r', encoding='utf-8') as file:
-        return file.read().splitlines()
+        for line in file:
+            review = json.loads(line)
+            # Prüfen, ob 'reviewText' im Review vorhanden ist
+            if 'reviewText' in review:
+                texts.append(review['reviewText'])
+                labels.append(1 if review['overall'] > 3 else 0)
+    return texts, labels
 
-train_true_path = 'train_true.txt'
-train_not_true_path = 'train_not_true.txt'
-test_true_path = 'test_true.txt'
-test_not_true_path = 'test_not_true.txt'
 
-train_true_titles = read_data(train_true_path)
-train_not_true_titles = read_data(train_not_true_path)
-test_true_titles = read_data(test_true_path)
-test_not_true_titles = read_data(test_not_true_path)
+print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
 
-train_titles = train_true_titles + train_not_true_titles
-train_labels = [1] * len(train_true_titles) + [0] * len(train_not_true_titles)
+if tf.config.experimental.list_physical_devices('GPU'):
+    print("TensorFlow will automatically use the GPU for computation.")
+else:
+    print("Make sure the GPU version of TensorFlow is installed and your system supports it.")
 
-test_titles = test_true_titles + test_not_true_titles
-test_labels = [1] * len(test_true_titles) + [0] * len(test_not_true_titles)
+train_path = 'train_reviews.json'
+test_path = 'test_reviews.json'
+
+train_texts, train_labels = read_json_data(train_path)
+test_texts, test_labels = read_json_data(test_path)
 
 tokenizer = Tokenizer(num_words=10000)
-tokenizer.fit_on_texts(train_titles)
-train_sequences = tokenizer.texts_to_sequences(train_titles)
+tokenizer.fit_on_texts(train_texts)
+train_sequences = tokenizer.texts_to_sequences(train_texts)
 train_data = pad_sequences(train_sequences, maxlen=20)
 
-test_sequences = tokenizer.texts_to_sequences(test_titles)
+test_sequences = tokenizer.texts_to_sequences(test_texts)
 test_data = pad_sequences(test_sequences, maxlen=20)
 
 train_data_array = np.array(train_data)
@@ -51,7 +58,7 @@ model.fit(train_data_array, train_labels_array, epochs=10, validation_split=0.2)
 loss, accuracy = model.evaluate(test_data_array, test_labels_array)
 print(f'Test Accuracy: {accuracy * 100:.2f}%')
 
-threshold = 0.5
+threshold = 0.6
 
 predicted_probabilities = model.predict(test_data_array)
 
