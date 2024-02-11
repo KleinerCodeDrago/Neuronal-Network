@@ -16,4 +16,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          PROMPT: "You are an software engeneer who should check this pull request and if everything is fine and ready for a merge with the master branch. You are currently typing in the comment field:"
+          PROMPT: "Answer as if you where software engeneer who should check this pull request and if everything looks like it works and is up to coding standards. Don't give your summary of everything that is working, only focus on telling if you give your okay for a merge with the master branch or why not. You are currently typing in the comment field for this pull request:"
