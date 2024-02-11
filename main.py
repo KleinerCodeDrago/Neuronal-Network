@@ -1,11 +1,12 @@
-import numpy as np
-import matplotlib.pyplot as plt
 import json
-from keras.models import Sequential
-from keras.layers import Dense, Embedding, GlobalAveragePooling1D
+import numpy as np
+import tensorflow as tf
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
-import tensorflow as tf
+import matplotlib.pyplot as plt
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Embedding, GlobalAveragePooling1D
+from tensorflow.keras.utils import plot_model
 
 def read_json_data(file_path):
     """
@@ -26,6 +27,8 @@ def read_json_data(file_path):
                 texts.append(review['reviewText'])
                 labels.append(1 if review['overall'] > 3 else 0)
     return texts, labels
+
+print(tf.__version__)
 
 # Check if TensorFlow is built with ROCm support
 if tf.test.is_built_with_rocm():
@@ -51,33 +54,34 @@ train_texts, train_labels = read_json_data(train_path)
 test_texts, test_labels = read_json_data(test_path)
 
 # Tokenize the text data
-tokenizer = Tokenizer(num_words=10000)
+tokenizer = Tokenizer(num_words=20000)
 tokenizer.fit_on_texts(train_texts)
 train_sequences = tokenizer.texts_to_sequences(train_texts)
-train_data = pad_sequences(train_sequences, maxlen=20)
-
 test_sequences = tokenizer.texts_to_sequences(test_texts)
-test_data = pad_sequences(test_sequences, maxlen=20)
+max_length = 100 
+train_data = pad_sequences(train_sequences, maxlen=max_length)
+test_data = pad_sequences(test_sequences, maxlen=max_length)
 
 # Convert data to numpy arrays
 train_data_array = np.array(train_data)
 train_labels_array = np.array(train_labels)
-
 test_data_array = np.array(test_data)
 test_labels_array = np.array(test_labels)
 
 # Define the model architecture
 model = Sequential()
-model.add(Embedding(10000, 16, input_length=20))
-model.add(GlobalAveragePooling1D())
-model.add(Dense(16, activation='relu'))
+model.add(Embedding(20000, 32, input_length=max_length))
+model.add(LSTM(32, dropout=0.2, recurrent_dropout=0.2))
 model.add(Dense(1, activation='sigmoid'))
 
 # Compile the model
 model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+plot_model(model, to_file='model_diagram.png', show_shapes=True, show_layer_names=True, rankdir='TB', expand_nested=False, dpi=300)
 
+# Define class weights
+class_weights = {0: 1.0, 1: 4.275}
 # Train the model
-model.fit(train_data_array, train_labels_array, epochs=10, validation_split=0.2)
+model.fit(train_data_array, train_labels_array, epochs=10, validation_split=0.2, class_weight=class_weights)
 
 # Evaluate the model on test data
 loss, accuracy = model.evaluate(test_data_array, test_labels_array)
@@ -113,40 +117,37 @@ print("Correct counts:", correct_counts)
 print("Incorrect counts:", incorrect_counts)
 
 # Generate a bar chart to represent the model's performance
-labels = ['Not true', 'True']
+labels = ['Negative Reviews', 'Positive Reviews']
 x = np.arange(len(labels))
 width = 0.35
 
 fig, ax = plt.subplots()
-rects1 = ax.bar(x - width/2, correct_counts, width, label='Correct', color='green')
-rects2 = ax.bar(x + width/2, incorrect_counts, width, label='Incorrect', color='red')
+rects1 = ax.bar(x - width/2, correct_counts, width, label='Correctly Predicted', color='green')
+rects2 = ax.bar(x + width/2, incorrect_counts, width, label='Incorrectly Predicted', color='red')
 
-ax.set_xlabel('Category')
+ax.set_xlabel('Review Type')
 ax.set_ylabel('Number of Predictions')
-ax.set_title('Model Performance on Test Data')
+ax.set_title('Model Performance on Test Data by Review Type')
 ax.set_xticks(x)
 ax.set_xticklabels(labels)
 ax.legend()
 
 for rect in rects1 + rects2:
     height = rect.get_height()
-    ax.annotate('{}'.format(height),
+    ax.annotate(f'{height}',
                 xy=(rect.get_x() + rect.get_width() / 2, height),
-                xytext=(0, 3),
+                xytext=(0, 3),  # 3 points vertical offset
                 textcoords="offset points",
                 ha='center', va='bottom')
 
 plt.show()
 
-# Predict probabilities again
-predicted_probabilities = model.predict(test_data_array)
-
 # Generate a histogram to visualize the predicted probabilities
 plt.figure(figsize=(10, 5))
-plt.hist(predicted_probabilities[test_labels_array == 0], bins=50, alpha=0.7, label='Not true')
-plt.hist(predicted_probabilities[test_labels_array == 1], bins=50, alpha=0.7, label='True')
-plt.xlabel('Predicted Probability of Being True')
+plt.hist(predicted_probabilities[test_labels_array == 0], bins=50, alpha=0.7, label='Negative Reviews')
+plt.hist(predicted_probabilities[test_labels_array == 1], bins=50, alpha=0.7, label='Positive Reviews')
+plt.xlabel('Predicted Probability of Positive Review')
 plt.ylabel('Number of Samples')
-plt.title('Histogram of Predicted Probabilities')
+plt.title('Histogram of Predicted Probabilities by Review Type')
 plt.legend()
 plt.show()
