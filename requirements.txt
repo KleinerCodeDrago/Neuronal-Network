@@ -1,3 +1,5 @@
 tensorflow
 keras
 matplotlib
+pydot
+plt
