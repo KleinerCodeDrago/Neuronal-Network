@@ -30,21 +30,21 @@ jobs:
         echo "PR Diff: $changed_code"
         escaped_code=$(echo "$changed_code" | jq -s -R -r @json)
         response=$(curl https://api.openai.com/v1/chat/completions  \
-         -H "Content-Type: application/json"  \
-         -H "Authorization: Bearer ${{secrets.OPEN_AI_KEY}}"  \
-         -d '{
-          "model": "gpt-4",
-          "messages": [
+         -H \"Content-Type: application/json\"  \
+         -H \"Authorization: Bearer ${{secrets.OPEN_AI_KEY}}\"  \
+         -d \'{
+          \"model\": \"gpt-4\",
+          \"messages\": [
             {
-              "role": "system",
-              "content": "'"${CODE_REVIEW_PROMPT}"'"
+              \"role\": \"system\",
+              \"content\": \"\'\"${CODE_REVIEW_PROMPT}\"\'\"
             },
             {
-              "role": "user",
-              "content": $escaped_code
+              \"role\": \"user\",
+              \"content\": $escaped_code
             }
           ]
-        }')
+        }\')
 
         echo "This is the response: $response"
         echo_review_suggestions=$(echo $response | jq -r '.choices[0].message.content')
