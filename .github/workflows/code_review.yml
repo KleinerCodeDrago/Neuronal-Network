@@ -23,8 +23,6 @@ jobs:
 
     - name: Perform Code Review With gpt-4
       id: code_review_suggestions
-      env:
-        CODE_REVIEW_PROMPT: "Review the following code changes and provide suggestions for improvement."
       run: |
         changed_code=$(cat ${{steps.git_diff.outputs.diff_file}})
         echo "PR Diff: $changed_code"
@@ -37,7 +35,7 @@ jobs:
           \"messages\": [
             {
               \"role\": \"system\",
-              \"content\": \"\'\"${CODE_REVIEW_PROMPT}\"\'\"
+              \"content\": \"\'\"${{vars.CODE_REVIEW_PROMPT}}\"\'\"
             },
             {
               \"role\": \"user\",
