@@ -16,4 +16,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          PROMPT: "You are an software engeneer who should check this pull request. You are currently typing in the comment field:"
+          PROMPT: "You are an software engeneer who should check this pull request and if everything is fine and ready for a merge with the master branch. You are currently typing in the comment field:"
