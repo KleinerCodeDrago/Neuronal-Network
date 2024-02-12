@@ -13,6 +13,12 @@ y = np.array([1 if x[0]**2 + x[1]**2 < radius**2 else 0 for x in X])
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
+plt.scatter(X_train[:, 0], X_train[:, 1], c=y_train, cmap=plt.cm.Spectral, edgecolor='k', alpha=0.7)
+plt.title('Visualisierung der Trainingsdaten')
+plt.xlabel('X1')
+plt.ylabel('X2')
+plt.show()
+
 model = tf.keras.Sequential([
     tf.keras.layers.Dense(1, input_dim=2, activation='sigmoid')
 ])
