@@ -56,7 +56,7 @@ test_dataset = create_dataset(test_texts, test_labels, batch_size)
 
 checkpoint_path = "mein_rezensionsmodell.h5"
 load_existing_model = True
-checkpoint = ModelCheckpoint(checkpoint_path, monitor='val_loss', save_best_only=True, verbose=1)
+checkpoint = ModelCheckpoint("model_checkpoint.h5", monitor='val_loss', save_best_only=True, verbose=1)
 early_stopping = EarlyStopping(monitor='val_loss', patience=5)
 model_path = 'mein_rezensionsmodell.h5'
 
@@ -67,7 +67,7 @@ else:
     print("Training new model...")
     model = create_model()
     model.fit(train_dataset, epochs=10, validation_data=test_dataset, callbacks=[checkpoint, early_stopping])
-    model.save(model_path)
+    model.save("final_model.h5")
 
 plot_model(model, to_file='model_diagram.png', show_shapes=True, show_layer_names=True, rankdir='TB', expand_nested=False, dpi=300)
 
