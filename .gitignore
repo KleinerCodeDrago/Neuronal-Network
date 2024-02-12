@@ -1,7 +1,12 @@
 __pycache__
 .venv
+llm/
+final_model.h5
+model_checkpoint.h5
+*.png
 
 #Training data
 *train*
 *test*
 *.json
+
