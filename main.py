@@ -1,15 +1,15 @@
+import os
 import json
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
-from tensorflow.keras.models import Sequential
+from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import Dense, Embedding, LSTM
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 from tensorflow.data import Dataset
 from tensorflow.keras.utils import plot_model
 import matplotlib.pyplot as plt
-
 strategy = tf.distribute.MirroredStrategy()
 
 def load_data(file_path):
@@ -34,6 +34,17 @@ def create_dataset(texts, labels, batch_size=128):
     dataset = dataset.cache().shuffle(len(data_array)).batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
     return dataset
 
+def create_model():
+    with strategy.scope():
+        model = Sequential([
+            Embedding(20000, 32, input_length=100),
+            LSTM(32, dropout=0.2, recurrent_dropout=0.2),
+            Dense(1, activation='sigmoid')
+        ])
+        model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+    return model
+
+
 print(tf.__version__)
 
 train_texts, train_labels = load_data('train_reviews.json')
@@ -43,22 +54,22 @@ batch_size = 128
 train_dataset = create_dataset(train_texts, train_labels, batch_size)
 test_dataset = create_dataset(test_texts, test_labels, batch_size)
 
-checkpoint_path = "model_checkpoint.h5"
+checkpoint_path = "mein_rezensionsmodell.h5"
+load_existing_model = True
 checkpoint = ModelCheckpoint(checkpoint_path, monitor='val_loss', save_best_only=True, verbose=1)
 early_stopping = EarlyStopping(monitor='val_loss', patience=5)
+model_path = 'mein_rezensionsmodell.h5'
 
-with strategy.scope():
-    model = Sequential([
-        Embedding(20000, 32, input_length=100),
-        LSTM(32, dropout=0.2, recurrent_dropout=0.2),
-        Dense(1, activation='sigmoid')
-    ])
-    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+if load_existing_model and os.path.exists(model_path):
+    print("Loading existing model...")
+    model = load_model(model_path)
+else:
+    print("Training new model...")
+    model = create_model()
+    model.fit(train_dataset, epochs=10, validation_data=test_dataset, callbacks=[checkpoint, early_stopping])
+    model.save(model_path)
 
 plot_model(model, to_file='model_diagram.png', show_shapes=True, show_layer_names=True, rankdir='TB', expand_nested=False, dpi=300)
-
-model.fit(train_dataset, epochs=10, validation_data=test_dataset, callbacks=[checkpoint, early_stopping])
-model.save('mein_rezensionsmodell.h5')
 
 # Evaluierung mit dem test_dataset
 loss, accuracy = model.evaluate(test_dataset)
